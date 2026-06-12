@@ -8,4 +8,7 @@ wheels/
 .env
 
 # Virtual environments
-.venv
+.venv/
+
+# Local Vector Database Engine files (Fixing the tutorial anti-pattern)
+qdrant_storage/
