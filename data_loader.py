@@ -14,10 +14,10 @@ splitter = SentenceSplitter(chunk_size=1000, chunk_overlap=200)
 
 def load_and_chunk_pdf(path: str):
     docs = PDFReader().load_data(file=path)
-    texts = [d.text for d in docs if getattr(d, "text", None)]
-    chunks = []
-    for t in texts:
-        chunks.extend(splitter.split_text(t))
+    page_texts = [d.text for d in docs if getattr(d, "text", None)]
+    full_document_text = "\n\n".join(page_texts)
+    chunks = splitter.split_text(full_document_text)
+    
     return chunks
 
 def embed_text(texts: list[str]) -> list[list[float]]:

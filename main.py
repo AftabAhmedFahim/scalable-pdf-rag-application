@@ -24,8 +24,9 @@ inngest_client = inngest.Inngest(
     fn_id="RAG: Inngest PDF",
     trigger=inngest.TriggerEvent(event="rag/inngest_pdf"),
     throttle=inngest.Throttle(
-        count=2, 
+        burst=2, 
         period=datetime.timedelta(minutes=1),
+        limit=10
     ),
     rate_limit=inngest.RateLimit(
         limit=1,
@@ -63,14 +64,14 @@ async def rag_query_pdf_ai(ctx: inngest.Context):
         query_vec = embed_text([question])[0]
         store = QdrantStorage()
         found = store.search(query_vec, top_k)
-        return RAGSearchResult(contexts=found[0], sources=found[1])
+        return RAGSearchResult(context=found["contexts"], sources=found["sources"])
 
     question = ctx.event.data["question"]
     top_k = int(ctx.event.data.get("top_k", 5))
 
     found = await ctx.step.run("embed-and-search", lambda: _search(question, top_k), output_type=RAGSearchResult)
 
-    context_block = "\n\n".join(f"- {c}" for c in found.contexts)
+    context_block = "\n\n".join(f"- {c}" for c in found.context)
     user_content = (
         "Use the following context to answer the question.\n\n"
         f"Context:\n{context_block}\n\n"
@@ -97,7 +98,7 @@ async def rag_query_pdf_ai(ctx: inngest.Context):
     )
 
     answer = res["choices"][0]["message"]["content"].strip()
-    return {"answer":answer, "sources":found.sources, "num_contexts": len(found.contexts)}
+    return {"answer":answer, "sources":found.sources, "num_contexts": len(found.context)}
 
 app = FastAPI()
 
