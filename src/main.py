@@ -7,9 +7,9 @@ from dotenv import load_dotenv
 import uuid
 import os
 import datetime
-from data_loader import load_and_chunk_pdf, embed_text
-from vector_db import QdrantStorage
-from custom_types import RAGQueryResult, RAGSearchResult, RAGUpsertResult, RAGChunkAndSrc
+from .data_loader import load_and_chunk_pdf, embed_text
+from .vector_db import QdrantStorage
+from .custom_types import RAGQueryResult, RAGSearchResult, RAGUpsertResult, RAGChunkAndSrc
 
 load_dotenv()
 
