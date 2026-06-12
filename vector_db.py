@@ -12,16 +12,24 @@ class QdrantStorage:
                 vectors_config=VectorParams(size=dim, distance=Distance.COSINE)
             )
     
-    def upsert(self, ids, vectors, payloads):
-        points = [PointStruct(id=ids[i], vector=vectors[i], payload=payloads[i]) for i in range(len(ids))]
-        self.client.upsert(self.collection, points=points)
+    def upsert(self, ids, vectors, payloads, batch_size: int = 100):
+        for i in range(0, len(ids), batch_size):
+            batch_ids = ids[i:i + batch_size]
+            batch_vectors = vectors[i:i + batch_size]
+            batch_payloads = payloads[i:i + batch_size]
+            
+            points = [
+                PointStruct(id=batch_ids[j], vector=batch_vectors[j], payload=batch_payloads[j])
+                for j in range(len(batch_ids))
+            ]
+            self.client.upsert(self.collection, points=points)
 
     def search(self, query_vector, top_k: int = 5):
         results = self.client.search(
             collection_name=self.collection,
             query_vector=query_vector,
             with_payload=True,
-            limit=top_k # top_k means how many results we're looking for this many results from the database
+            limit=top_k 
         )
         contexts = []
         sources = set()
@@ -34,4 +42,4 @@ class QdrantStorage:
                 contexts.append(text)
                 sources.add(source)
         
-        return {"contexts": contexts, "sources":list(sources)}
+        return {"contexts": contexts, "sources": list(sources)}
