@@ -2,6 +2,7 @@ import logging
 from fastapi import FastAPI
 import inngest
 import inngest.fast_api
+from inngest.experimental import ai
 from dotenv import load_dotenv
 import uuid
 import os
@@ -18,7 +19,6 @@ inngest_client = inngest.Inngest(
     is_production=False,
     serializer=inngest.PydanticSerializer()
 )
-
 
 @inngest_client.create_function(
     fn_id="RAG: Inngest PDF",
@@ -54,7 +54,7 @@ async def rag_query_pdf_ai(ctx: inngest.Context):
         query_vec = embed_text([question])[0]
         store = QdrantStorage()
         found = store.search(query_vec, top_k)
-        return RAGSearchResult(contexts=found["contexts"], sources=found["sources"])
+        return RAGSearchResult(contexts=found[0], sources=found[1])
 
     question = ctx.event.data["question"]
     top_k = int(ctx.event.data.get("top_k", 5))
@@ -88,7 +88,7 @@ async def rag_query_pdf_ai(ctx: inngest.Context):
     )
 
     answer = res["choices"][0]["message"]["content"].strip()
-    return {"answer":answer, "sources":found.sources, "num_contexts": len(found.context)}
+    return {"answer":answer, "sources":found.sources, "num_contexts": len(found.contexts)}
 
 app = FastAPI()
 
